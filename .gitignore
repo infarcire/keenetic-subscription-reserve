@@ -1,0 +1,12 @@
+# Personal router data must never be committed.
+*.dpapi
+*.env
+settings.json
+config.yaml
+config.yml
+subscription*.yaml
+subscription*.json
+*.previous
+before-*/
+work/
+node_modules/

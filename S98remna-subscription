@@ -1,0 +1,23 @@
+#!/opt/bin/sh
+PATH=/opt/bin:/opt/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+export PATH
+PIDFILE=/opt/var/run/remna-subscription.pid
+PROGRAM=/opt/sbin/remna-subscription-update
+running() {
+    pid=$(cat "$PIDFILE" 2>/dev/null || :)
+    case "$pid" in ''|*[!0-9]*) return 1;; esac
+    kill -0 "$pid" 2>/dev/null && tr '\000' ' ' < "/proc/$pid/cmdline" | grep -Fq "$PROGRAM daemon"
+}
+case "${1:-start}" in
+    start)
+        if [ -f /opt/etc/remna-subscription/disabled ]; then printf 'remna-subscription disabled\n'; exit 0; fi
+        if running; then printf 'remna-subscription already running\n'; exit 0; fi
+        mkdir -p /opt/var/run
+        nohup /opt/bin/sh "$PROGRAM" daemon </dev/null >/dev/null 2>&1 &
+        printf 'remna-subscription started\n';;
+    stop)
+        if running; then kill "$pid"; printf 'remna-subscription stopping\n'; else printf 'remna-subscription not running\n'; fi;;
+    restart) "$0" stop; sleep 1; "$0" start;;
+    status) if running; then printf 'remna-subscription running pid=%s\n' "$pid"; else printf 'remna-subscription stopped\n'; exit 1; fi;;
+    *) exit 2;;
+esac
